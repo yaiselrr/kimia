@@ -31,7 +31,7 @@ class TestController extends AbstractController
 
     /**
      * 
-     * @Route("/team", name="get_teams")
+     * @Route("/teamsfdsdf", name="get_teamsfdsfds")
      */
     public function index(Request $request, TeamRepository $repo)
     {
