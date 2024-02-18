@@ -1,0 +1,18 @@
+App\Entity\Team:
+    properties:
+        name:
+            - NotBlank: ~
+            - Length:
+                min: 5
+                max: 50
+                minMessage: 'The name must be at least {{ limit }} characters long'
+                maxMessage: 'The name cannot be longer than {{ limit }} characters'
+                allowEmptyString: false
+        color:
+            - NotBlank: ~
+            - Length:
+                min: 7
+                max: 7
+                minMessage: 'The name must be at least {{ limit }} characters long'
+                maxMessage: 'The name cannot be longer than {{ limit }} characters'
+                allowEmptyString: false

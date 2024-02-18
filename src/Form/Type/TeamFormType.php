@@ -24,4 +24,15 @@ class TeamFormType extends AbstractType
             'data_class' => Team::class,
         ]);
     }
+
+    // Estos dos metodos evitan que tenga que enviar el prefijo desde postman
+    public function getBlockPrefix()
+    {
+        return "";
+    }
+
+    public function getName()
+    {
+        return "";
+    }
 }
