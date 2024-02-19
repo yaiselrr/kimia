@@ -8,10 +8,14 @@ use App\Form\Model\TeamDto;
 use App\Form\Type\PlayerFormType;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
+use App\Service\PlayerFormProcessor;
+use App\Service\PlayerManager;
+use App\Service\TeamManager;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use FOS\RestBundle\View\View;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,16 +24,21 @@ use Symfony\Component\HttpFoundation\Response;
 class PlayerController extends AbstractFOSRestController
 {
     private $logger;
-    private $em;
-    private $teamRepo;
     private $playerRepo;
+    private $playerManager;
+    private $playerFormProcessor;
 
-    public function __construct(LoggerInterface $logger, EntityManagerInterface $em, TeamRepository $teamRepo, PlayerRepository $playerRepo)
+    public function __construct(
+        LoggerInterface $logger,  
+        PlayerRepository $playerRepo, 
+        PlayerManager $playerManager, 
+        PlayerFormProcessor $playerFormProcessor
+        )
     {
         $this->logger = $logger;
-        $this->em = $em;
-        $this->teamRepo = $teamRepo;
         $this->playerRepo = $playerRepo;
+        $this->playerManager = $playerManager;
+        $this->playerFormProcessor = $playerFormProcessor;
     }
     /**
      * 
@@ -50,38 +59,18 @@ class PlayerController extends AbstractFOSRestController
      */
     public function store(Request $request)
     {
-        $this->logger->info('create action callled');
+        $player = $this->playerManager->findByOne($request->get('name'));
 
-        $team = $this->teamRepo->find((int)$request->get('team'));
-
-        if (!$team) {
-            throw $this->createNotFoundException('Team not found');
+        if ($player) {
+            return View::create('player already exists', Response::HTTP_BAD_REQUEST);
         }
 
-        $playerDto = new PlayerDto();
+        [$player, $error] = ($this->playerFormProcessor)($request);
 
-        $form = $this->createForm(PlayerFormType::class, $playerDto);
+        $statusCode = $player ? Response::HTTP_CREATED : Response::HTTP_BAD_REQUEST;
+        $data = $player ?? $error;
 
-        $form->handleRequest($request);
-
-        if (!$form->isSubmitted()) {
-            return new Response('', Response::HTTP_BAD_REQUEST);
-        }
-
-        if ($form->isValid()) {
-            $player = new Player();
-
-            $player->setName($playerDto->name);
-            $player->setPosition($playerDto->position);
-            $player->setTeam($team);
-
-            $this->em->persist($player);
-            $this->em->flush();
-
-            return $player;
-        }
-
-        return $form;
+        return View::create($data, $statusCode);
     }
 
     /**
@@ -89,14 +78,12 @@ class PlayerController extends AbstractFOSRestController
      * @Rest\Get(path="/players/{id}", requirements={"id"="\d+"})
      * @Rest\View(serializerGroups={"player"},serializerEnableMaxDepthChecks=true)
      */
-    public function show(int $id)
+    public function show(Player $player)
     {
-        $this->logger->info('get player action callled');
-
-        $player = $this->playerRepo->find($id);
-
+        $player = $this->playerManager->find($player);
+        
         if (!$player) {
-            throw $this->createNotFoundException('Player not found');
+            return View::create('player does not exists', Response::HTTP_BAD_REQUEST);
         }
 
         return $player;
@@ -107,44 +94,37 @@ class PlayerController extends AbstractFOSRestController
      * @Rest\Post(path="/players/{id}/edit", requirements={"id"="\d+"})
      * @Rest\View(serializerGroups={"player"},serializerEnableMaxDepthChecks=true)
      */
-    public function update(Request $request, int $id)
+    public function update(Request $request, Player $player)
     {
-        $this->logger->info('update action callled');
-
-        $player = $this->playerRepo->find($id);
+        $player = $this->playerManager->find($player);
 
         if (!$player) {
-            throw $this->createNotFoundException('Player not found');
+            return View::create('player does not exists', Response::HTTP_BAD_REQUEST);
         }
 
-        $team = $this->teamRepo->find((int)$request->get('team'));
+        [$player, $error] = ($this->playerFormProcessor)($request, $player);
 
-        if (!$team) {
-            throw $this->createNotFoundException('Team not found');
+        $statusCode = $player ? Response::HTTP_ACCEPTED : Response::HTTP_BAD_REQUEST;
+        $data = $player ?? $error;
+
+        return View::create($data, $statusCode);
+    }
+
+    /**
+     * 
+     * @Rest\Post(path="/players/{id}", requirements={"id"="\d+"})
+     * @Rest\View(serializerGroups={"player"},serializerEnableMaxDepthChecks=true)
+     */
+    public function delete(Player $player)
+    {
+        $player = $this->playerManager->find($player);
+
+        if (!$player) {
+            return View::create('player does not exists', Response::HTTP_BAD_REQUEST);
         }
 
-        $playerDto = new PlayerDto();
+        $this->playerManager->remove($player);
 
-        $form = $this->createForm(PlayerFormType::class, $playerDto);
-
-        $form->handleRequest($request);
-
-        if (!$form->isSubmitted()) {
-            return new Response('', Response::HTTP_BAD_REQUEST);
-        }
-        
-        if ($form->isValid()) {
-            $player->setName($playerDto->name);
-            $player->setPosition($playerDto->position);
-            $player->setTeam($team);
-
-            $this->em->persist($player);
-            $this->em->flush();
-            $this->em->refresh($player);
-
-            return $player;
-        }
-
-        return $form;
+        return View::create(null, Response::HTTP_NO_CONTENT);
     }
 }

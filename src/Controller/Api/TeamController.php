@@ -6,9 +6,12 @@ use App\Entity\Team;
 use App\Form\Model\TeamDto;
 use App\Form\Type\TeamFormType;
 use App\Repository\TeamRepository;
+use App\Service\TeamFormProcessor;
+use App\Service\TeamManager;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use FOS\RestBundle\View\View;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,13 +20,20 @@ use Symfony\Component\HttpFoundation\Response;
 class TeamController extends AbstractFOSRestController
 {
     private $logger;
-    private $em;
-    private $repo;
+    private $teamRepo;
+    private $teamManager;
+    private $teamFormProcessor;
 
-    public function __construct(LoggerInterface $logger, EntityManagerInterface $em, TeamRepository $repo) {
+    public function __construct(
+        LoggerInterface $logger,
+        TeamRepository $teamRepo,
+        TeamManager $teamManager,
+        TeamFormProcessor $teamFormProcessor
+    ) {
         $this->logger = $logger;
-        $this->em = $em;
-        $this->repo = $repo;
+        $this->teamRepo = $teamRepo;
+        $this->teamManager = $teamManager;
+        $this->teamFormProcessor = $teamFormProcessor;
     }
     /**
      * 
@@ -34,7 +44,7 @@ class TeamController extends AbstractFOSRestController
     {
         $this->logger->info('list action callled');
 
-        return $this->repo->findAll();
+        return $this->teamRepo->findAll();
     }
 
     /**
@@ -42,28 +52,20 @@ class TeamController extends AbstractFOSRestController
      * @Rest\Post(path="/teams/new")
      * @Rest\View(serializerGroups={"team"},serializerEnableMaxDepthChecks=true)
      */
-    public function store(Request $request,)
+    public function store(Request $request)
     {
-        $this->logger->info('create team action callled');
+        $team = $this->teamManager->findByOne($request->get('name'));
 
-        $teamDto = new TeamDto();
-        $form = $this->createForm(TeamFormType::class, $teamDto);
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $team = new Team();
-
-            $team->setName($teamDto->name);
-            $team->setColor($teamDto->color);
-
-            $this->em->persist($team);
-            $this->em->flush();
-
-            return $team;
+        if ($team) {
+            return View::create('team already exists', Response::HTTP_BAD_REQUEST);
         }
 
-        return $form;
+        [$team, $error] = ($this->teamFormProcessor)($request);
+
+        $statusCode = $team ? Response::HTTP_CREATED : Response::HTTP_BAD_REQUEST;
+        $data = $team ?? $error;
+
+        return View::create($data, $statusCode);
     }
 
     /**
@@ -71,14 +73,12 @@ class TeamController extends AbstractFOSRestController
      * @Rest\Get(path="/teams/{id}", requirements={"id"="\d+"})
      * @Rest\View(serializerGroups={"team"},serializerEnableMaxDepthChecks=true)
      */
-    public function show(int $id)
+    public function show(Team $team)
     {
-        $this->logger->info('get team action callled');
-
-        $team = $this->repo->find($id);
+        $team = $this->teamManager->find($team);
 
         if (!$team) {
-            throw $this->createNotFoundException('Team not found');
+            return View::create('team does not exists', Response::HTTP_BAD_REQUEST);
         }
 
         return $team;
@@ -89,37 +89,37 @@ class TeamController extends AbstractFOSRestController
      * @Rest\Post(path="/teams/{id}/edit", requirements={"id"="\d+"})
      * @Rest\View(serializerGroups={"team"},serializerEnableMaxDepthChecks=true)
      */
-    public function update(Request $request, int $id)
+    public function update(Request $request, Team $team)
     {
-        $this->logger->info('update team action callled');
-
-        $team = $this->repo->find($id);
+        $team = $this->teamManager->find($team);
 
         if (!$team) {
-            throw $this->createNotFoundException('Team not found');
+            return View::create('team does not exists', Response::HTTP_BAD_REQUEST);
         }
 
-        $teamDto = new TeamDto();
+        [$team, $error] = ($this->teamFormProcessor)($request, $team);
 
-        $form = $this->createForm(TeamFormType::class, $teamDto);
+        $statusCode = $team ? Response::HTTP_ACCEPTED : Response::HTTP_BAD_REQUEST;
+        $data = $team ?? $error;
 
-        $form->handleRequest($request);
+        return View::create($data, $statusCode);
+    }
 
-        if (!$form->isSubmitted()) 
-        {
-            return new Response('', Response::HTTP_BAD_REQUEST);
+    /**
+     * 
+     * @Rest\Post(path="/teams/{id}", requirements={"id"="\d+"})
+     * @Rest\View(serializerGroups={"team"},serializerEnableMaxDepthChecks=true)
+     */
+    public function delete(Team $team)
+    {
+        $team = $this->teamManager->find($team);
+
+        if (!$team) {
+            return View::create('team does not exists', Response::HTTP_BAD_REQUEST);
         }
-        
-        if ($form->isValid()) {
-            $team->setName($teamDto->name);
 
-            $this->em->persist($team);
-            $this->em->flush();
-            $this->em->refresh($team);
+        $this->teamManager->remove($team);
 
-            return $team;
-        }
-
-        return $form;
+        return View::create(null, Response::HTTP_NO_CONTENT);
     }
 }
