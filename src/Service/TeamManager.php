@@ -22,6 +22,13 @@ class TeamManager
         $this->teamRepo = $teamRepo;
     }
 
+    public function findById(int $id): ?Team
+    {
+        $this->logger->info('Get team action callled');
+
+        return $this->teamRepo->find($id);
+    }
+
     public function find(Team $team): ?Team
     {
         $this->logger->info('Get team action callled');

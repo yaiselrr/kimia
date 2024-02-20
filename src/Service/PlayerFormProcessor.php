@@ -22,9 +22,10 @@ class PlayerFormProcessor
         $this->formFactoryCreate = $formFactoryCreate;
     }
 
-    public function __invoke(Request $request, Player $player = null): array
+    public function __invoke($playerPar, $teamId): array
+    // ['id' => 1, 'name' => 'Thibaut Courtois', 'position' => 'defending']
     {
-        $team = $this->teamManager->find((int)$request->get('team'));
+        $team = $this->teamManager->find($teamId);
 
         if (!$team) {
             return [null, 'Team not found'];
@@ -34,14 +35,14 @@ class PlayerFormProcessor
 
         $form = $this->formFactoryCreate->create(PlayerFormType::class, $playerDto);
 
-        $form->handleRequest($request);
+        $form->handleRequest($playerPar);
 
         if (!$form->isSubmitted()) {
             return [null, 'Form is not submited'];
         }
 
         if ($form->isValid()) {
-            $player = $player == null ? $this->playerManager->create() : $player;
+            $player = $playerPar == null ? $this->playerManager->create() : $playerPar;
 
             $player->setName($playerDto->name);
             $player->setPosition($playerDto->position);
