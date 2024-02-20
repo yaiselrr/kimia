@@ -25,6 +25,25 @@ class PlayerManager
         $this->playerRepo = $playerRepo;
     }
 
+    public function findAll(): ?Array
+    {
+        $this->logger->info('Get all players action callled');
+
+        $players = $this->playerRepo->findAll();
+        $playesArray = [];
+
+        foreach ($players as $value) {
+            $playesArray[] = [
+                'id' => $value->getId(),
+                'name' => $value->getName(),
+                'position' => $value->getPosition(),
+                'team' => $value->getTeam()->getName(),
+            ];
+        }
+
+        return $playesArray;
+    }
+
     public function find(Player $player): ?Player
     {
         $this->logger->info('Get player action callled');

@@ -49,7 +49,7 @@ class PlayerController extends AbstractFOSRestController
     {
         $this->logger->info('list action callled');
 
-        return $this->playerRepo->findAll();
+        return $this->playerManager->findAll();
     }
 
     /**
