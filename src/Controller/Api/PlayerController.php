@@ -104,7 +104,7 @@ class PlayerController extends AbstractFOSRestController
 
         [$player, $error] = ($this->playerFormProcessor)($request, $player);
 
-        $statusCode = $player ? Response::HTTP_ACCEPTED : Response::HTTP_BAD_REQUEST;
+        $statusCode = $player ? Response::HTTP_OK : Response::HTTP_BAD_REQUEST;
         $data = $player ?? $error;
 
         return View::create($data, $statusCode);

@@ -2,28 +2,22 @@
 
 namespace App\Service;
 
-use App\Repository\PlayerRepository;
-use App\Repository\TeamRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Form\Model\GameDto;
 use Psr\Log\LoggerInterface;
 
 class GameManager
 {
     private $logger;
-    private $em;
-    private $teamRepo;
-    private $playerRepo;
 
-    public function __construct(LoggerInterface $logger, EntityManagerInterface $em, TeamRepository $teamRepo, PlayerRepository $playerRepo)
+    public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
-        $this->em = $em;
-        $this->teamRepo = $teamRepo;
-        $this->playerRepo = $playerRepo;
     }
 
     public function randomArray($array): ?Array
     {
+        $this->logger->info('randomArray action callled');
+
         $resultArray = [];
 
         foreach ($array as $value) {
@@ -40,6 +34,8 @@ class GameManager
 
     public function asignArray($array): ?Array
     {
+        $this->logger->info('asignArray action callled');
+
         $playersArrayResult = [];
         $claves_aleatorias = array_rand($array, 10);
 
@@ -48,5 +44,14 @@ class GameManager
         }
 
         return $playersArrayResult;
+    }
+
+    public function createDto(): GameDto
+    {
+        $this->logger->info('Create game objectDto action callled');
+
+        $gameDto = new GameDto();
+
+        return $gameDto;
     }
 }

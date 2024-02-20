@@ -99,7 +99,7 @@ class TeamController extends AbstractFOSRestController
 
         [$team, $error] = ($this->teamFormProcessor)($request, $team);
 
-        $statusCode = $team ? Response::HTTP_ACCEPTED : Response::HTTP_BAD_REQUEST;
+        $statusCode = $team ? Response::HTTP_OK : Response::HTTP_BAD_REQUEST;
         $data = $team ?? $error;
 
         return View::create($data, $statusCode);
