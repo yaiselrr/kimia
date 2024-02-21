@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Player;
 use App\Form\Model\PlayerDto;
+use App\Form\Model\PlayerFindDto;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -44,11 +45,30 @@ class PlayerManager
         return $playesArray;
     }
 
-    public function find(Player $player): ?Player
+    public function findShow(Player $player)
     {
         $this->logger->info('Get player action callled');
 
-        return $this->playerRepo->find($player->getId());
+        $playerFind = $this->playerRepo->find($player);
+
+        $playerDto = new PlayerFindDto;
+        $playerDto->name = $playerFind->getName();
+        $playerDto->position = $playerFind->getPosition();
+        $playerDto->team = $playerFind->getTeam()->getName();
+        $playerDto->idTeam = $playerFind->getTeam()->getId();
+        
+        return $playerDto;
+
+    }
+
+    public function find(Player $player): Player
+    {
+        $this->logger->info('Get player action callled');
+
+        $playerFind = $this->playerRepo->find($player);
+        
+        return $playerFind;
+
     }
 
     public function findByOne(string $name): ?Player
@@ -115,13 +135,13 @@ class PlayerManager
         return $response;
     }
 
-    public function remove(Player $player): Player
-    {
-        $playerOut = $this->find($player);
+    // public function remove(Player $player): Player
+    // {
+    //     // $playerOut = $this->find($player);
 
-        $this->em->remove($player);
-        $this->em->flush();
+    //     $this->em->remove($player);
+    //     $this->em->flush();
 
-        return $playerOut;
-    }
+    //     // return $playerOut;
+    // }
 }

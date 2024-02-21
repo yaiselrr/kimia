@@ -80,13 +80,24 @@ class PlayerController extends AbstractFOSRestController
      */
     public function show(Player $player)
     {
-        $player = $this->playerManager->find($player);
+        $playerFind = $this->playerManager->findShow($player);
         
-        if (!$player) {
+        if (!$playerFind) {
             return View::create('player does not exists', Response::HTTP_BAD_REQUEST);
         }
 
-        return $player;
+        $response = new JsonResponse();
+        
+        $response->setData([
+            'data' => [
+                    'name' => $playerFind->name,
+                    'position' => $playerFind->position,
+                    'team' => $playerFind->team,
+                    'id_team' => $playerFind->idTeam,
+            ]
+        ]);
+
+        return $response;
     }
 
     /**
@@ -123,7 +134,7 @@ class PlayerController extends AbstractFOSRestController
             return View::create('player does not exists', Response::HTTP_BAD_REQUEST);
         }
 
-        $this->playerManager->remove($player);
+        // $this->playerManager->remove($player);
 
         return View::create(null, Response::HTTP_NO_CONTENT);
     }
