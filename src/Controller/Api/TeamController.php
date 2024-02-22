@@ -75,7 +75,7 @@ class TeamController extends AbstractFOSRestController
      */
     public function show(Team $team)
     {
-        $team = $this->teamManager->find($team);
+        $team = $this->teamManager->find($team->getId());
 
         if (!$team) {
             return View::create('team does not exists', Response::HTTP_BAD_REQUEST);
@@ -91,7 +91,7 @@ class TeamController extends AbstractFOSRestController
      */
     public function update(Request $request, Team $team)
     {
-        $team = $this->teamManager->find($team);
+        $team = $this->teamManager->find($team->getId());
 
         if (!$team) {
             return View::create('team does not exists', Response::HTTP_BAD_REQUEST);
@@ -112,7 +112,7 @@ class TeamController extends AbstractFOSRestController
      */
     public function delete(Team $team)
     {
-        $team = $this->teamManager->find($team);
+        $team = $this->teamManager->find($team->getId());
 
         if (!$team) {
             return View::create('team does not exists', Response::HTTP_BAD_REQUEST);

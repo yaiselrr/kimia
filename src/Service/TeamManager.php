@@ -29,11 +29,11 @@ class TeamManager
         return $this->teamRepo->find($id);
     }
 
-    public function find(Team $team): ?Team
+    public function find(int $id): ?Team
     {
         $this->logger->info('Get team action callled');
 
-        return $this->teamRepo->find($team->getId());
+        return $this->teamRepo->find($id);
     }
 
     public function findByOne(string $name): ?Team
@@ -102,7 +102,7 @@ class TeamManager
 
     public function remove(Team $team): Team
     {
-        $teamOut = $this->find($team);
+        $teamOut = $this->find($team->getId());
 
         $this->em->remove($team);
         $this->em->flush();

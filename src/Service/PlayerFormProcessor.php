@@ -24,6 +24,7 @@ class PlayerFormProcessor
 
     public function __invoke(Request $request, Player $player = null): array
     {
+        dd($request->get('team'));
         $team = $this->teamManager->find($request->get('team'));
 
         if (!$team) {

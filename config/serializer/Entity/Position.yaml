@@ -1,0 +1,6 @@
+App\Entity\Position:
+    attributes:
+        id:
+            groups: ['position']
+        name:
+            groups: ['position']

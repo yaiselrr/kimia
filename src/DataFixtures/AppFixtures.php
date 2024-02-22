@@ -12,7 +12,7 @@ class AppFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $positionArray = ['goalkeeper', 'midfield', 'defender', 'forward'];
+        $positionArray = ['goalkeeper', 'midfield', 'defending', 'forward'];
 
         $teams = [
             ['id' => 1, 'name' => 'Barca', 'color' => '#000000'],

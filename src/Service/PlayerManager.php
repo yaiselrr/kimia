@@ -135,13 +135,13 @@ class PlayerManager
         return $response;
     }
 
-    // public function remove(Player $player): Player
-    // {
-    //     // $playerOut = $this->find($player);
+    public function remove(Player $player): Player
+    {
+        $playerOut = $this->find($player);
 
-    //     $this->em->remove($player);
-    //     $this->em->flush();
+        $this->em->remove($player);
+        $this->em->flush();
 
-    //     // return $playerOut;
-    // }
+        return $playerOut;
+    }
 }
